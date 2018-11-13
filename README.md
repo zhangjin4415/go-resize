@@ -19,4 +19,6 @@ type MonoUInt8 struct {
 imgResized := resize.Resize(srcImg, toWidth, toHeight, resize.InterCubic)
 ```
 
-## It's developing, now it's only can resize by InterCubic!
+## now it's only can resize gray image by InterCubic!
+
+## It's developing... 

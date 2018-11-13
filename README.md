@@ -14,6 +14,7 @@ type MonoUInt8 struct {
 }
 ```
 ## use
+### go get github.com/zhangjin4415/go-resize
 
 ```
 imgResized := resize.Resize(srcImg, toWidth, toHeight, resize.InterCubic)

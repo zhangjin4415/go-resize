@@ -50,7 +50,7 @@ func Resize(srcImg MonoUInt8, toWidth, toHeight int, interp Interpolation) (dstI
 		return
 
 	case InterLinear:
-		err = fmt.Errorf("InterLinear is developing")
+		dstImg, err = resizeLinear(srcImg, toWidth, toHeight)
 		return
 
 	case InterCubic:
@@ -59,6 +59,34 @@ func Resize(srcImg MonoUInt8, toWidth, toHeight int, interp Interpolation) (dstI
 	}
 	return
 }
+
+
+// resizeLinear ...
+func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err error) {
+	const ksize int = 2
+	xofs, yofs, alpha, beta, xmin, xmax := getLinear(srcImg, toWidth, toHeight, ksize)
+
+	var betaIdx int
+	for dy := 0; dy < toHeight; dy++ {
+		srows := getSrows(yofs[dy], srcImg.Height, ksize) //0,1  3,4 ...
+		rows := hResizeLinear(srcImg, srows, xofs, alpha, toWidth, xmin, xmax, ksize)
+		out, e := vResizeLinear(rows, beta[betaIdx:betaIdx+ksize], toWidth)
+		// if e != nil {
+		// 	err = e
+		// 	break
+		// }
+		betaIdx += 2
+		// for _, val := range out {
+		// 	dstImg.Frame = append(dstImg.Frame, uint8(val))
+		// }
+		// dstImg.Width, dstImg.Height = toWidth, toHeight
+		fmt.Println(out, e)
+	}
+
+	fmt.Println(xofs, yofs, alpha, beta, xmin, xmax)
+	return
+}
+
 
 // resizeCubic ...
 func resizeCubic(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err error) {

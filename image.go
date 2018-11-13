@@ -1,6 +1,5 @@
 package main
 
-
 // FrameUInt8 ...
 type FrameUInt8 []uint8
 
@@ -10,4 +9,3 @@ type MonoUInt8 struct {
 	Width  int
 	Height int
 }
-

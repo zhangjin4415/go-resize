@@ -5,7 +5,7 @@ Copyright (c) 2018, Zhang Jin <1654637062@qq.com>
 // Example:
 //     imgResized := resize.Resize(srcImg, toWidth, toHeight, resize.InterCubic)
 
-package main
+package resize
 
 import (
 	"fmt"

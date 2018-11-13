@@ -1,4 +1,4 @@
-package main
+package resize
 
 // FrameUInt8 ...
 type FrameUInt8 []uint8

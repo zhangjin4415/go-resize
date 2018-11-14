@@ -13,7 +13,7 @@ func getCubic(oldImg MonoUInt8, toWidth, toHeight, ksize int) (xofs, yofs, alpha
 	xmin, xmax = 0, toWidth
 	for dx := 0; dx < toWidth; dx++ {
 		fx := (float32(dx)+0.5)*scaleX - 0.5
-		sx := int(fx)
+		sx := int(math.Floor(float64(fx)))
 		fx -= float32(sx)
 
 		if sx < (ksize/2 - 1) {
@@ -35,7 +35,7 @@ func getCubic(oldImg MonoUInt8, toWidth, toHeight, ksize int) (xofs, yofs, alpha
 
 	for dy := 0; dy < toHeight; dy++ {
 		fy := (float32(dy)+0.5)*scaleY - 0.5
-		sy := int(fy)
+		sy := int(math.Floor(float64(fy)))
 		fy -= float32(sy)
 
 		yofs = append(yofs, sy)

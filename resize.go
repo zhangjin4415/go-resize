@@ -61,13 +61,14 @@ func Resize(srcImg MonoUInt8, toWidth, toHeight int, interp Interpolation) (dstI
 	return
 }
 
+
 // resizeLinear ...
 func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err error) {
 	scaleX := float32(srcImg.Width) / float32(toWidth)
 	scaleY := float32(srcImg.Height) / float32(toHeight)
 	for j := 0; j < toHeight; j++ {
 		fy := (float32(j)+0.5)*scaleY - 0.5
-		sy := int(fy)
+		sy := int(math.Floor(float64(fy)))
 		fy -= float32(sy)
 		if sy > srcImg.Height {
 			sy = srcImg.Height - 1
@@ -81,7 +82,7 @@ func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, er
 
 		for i := 0; i < toWidth; i++ {
 			fx := (float32(i)+0.5)*scaleX - 0.5
-			sx := int(fx)
+			sx := int(math.Floor(float64(fx)))
 			fx -= float32(sx)
 
 			if sx < 0 {

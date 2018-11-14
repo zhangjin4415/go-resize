@@ -69,13 +69,12 @@ func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, er
 		fy := (float32(j)+0.5)*scaleY - 0.5
 		sy := int(fy)
 		fy -= float32(sy)
-		if sy > srcImg.Height-2 {
-			sy = srcImg.Height - 2
+		if sy > srcImg.Height {
+			sy = srcImg.Height - 1
 		}
 		if sy < 0 {
 			sy = 0
 		}
-
 		var cbufy [2]float32
 		cbufy[0] = (1.0 - fy) * 2048
 		cbufy[1] = 2048 - cbufy[0]
@@ -88,20 +87,44 @@ func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, er
 			if sx < 0 {
 				fx, sx = 0, 0
 			}
-			if sx >= srcImg.Width-1 {
-				fx, sx = 0, srcImg.Width-2
+			if sx > srcImg.Width {
+				fx, sx = 0, srcImg.Width-1
 			}
 
 			var cbufx [2]float32
 			cbufx[0] = (1.0 - fx) * 2048
 			cbufx[1] = 2048 - cbufx[0]
 
-			data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
-			data2 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
-			data3 := float32(srcImg.Frame[sy*srcImg.Width+sx+1]) * cbufx[1] * cbufy[0]
-			data4 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx+1]) * cbufx[1] * cbufy[1]
-			data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
-			dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+			if sx<srcImg.Width-1 && sy<srcImg.Height-1{
+				data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
+				data2 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
+				data3 := float32(srcImg.Frame[sy*srcImg.Width+sx+1]) * cbufx[1] * cbufy[0]
+				data4 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx+1]) * cbufx[1] * cbufy[1]
+				data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
+				dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+			}else if sx<srcImg.Width-1{
+				data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
+				data2 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
+				data3 := float32(srcImg.Frame[sy*srcImg.Width+sx+1]) * cbufx[1] * cbufy[0]
+				data4 := float32(srcImg.Frame[sy*srcImg.Width+sx+1]) * cbufx[1] * cbufy[1]
+				data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
+				dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+			}else if sy<srcImg.Height-1{
+				data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
+				data2 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
+				data3 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[1] * cbufy[0]
+				data4 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx]) * cbufx[1] * cbufy[1]
+				data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
+				dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+			}else{
+				data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
+				data2 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
+				data3 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[1] * cbufy[0]
+				data4 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[1] * cbufy[1]
+				data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
+				dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+			}
+			
 		}
 
 	}

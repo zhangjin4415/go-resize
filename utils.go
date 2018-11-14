@@ -5,58 +5,6 @@ import (
 	"math"
 )
 
-// getLinear ...
-func getLinear(oldImg MonoUInt8, toWidth, toHeight, ksize int) (xofs, yofs, alpha, beta []int, xmin, xmax int) {
-	scaleX := float32(oldImg.Width) / float32(toWidth)
-	scaleY := float32(oldImg.Height) / float32(toHeight)
-
-	xmin, xmax = 0, toWidth
-	for dx := 0; dx < toWidth; dx++ {
-		fx := (float32(dx)+0.5)*scaleX - 0.5
-		fmt.Println(fx)
-		sx := int(fx)
-		fx -= float32(sx)
-
-		if sx < (ksize/2 - 1) {
-			xmin = dx + 1
-			if sx < 0 {
-				fx, sx = 0.0, 0
-			}
-		}
-		if sx+ksize/2 >= oldImg.Width {
-			if xmax > dx {
-				xmax = dx
-			}
-			if sx>= oldImg.Width-1{
-				fx, sx = 0.0, oldImg.Width-1
-			}
-		}
-
-		xofs = append(xofs, sx)
-		cbuf := []float32{1.0-fx,fx}
-
-		fmt.Println("cbuf:",cbuf)
-
-		for k := 0; k < ksize; k++ {
-			alpha = append(alpha, int(math.Round(float64(cbuf[k]*2048.0))))
-		}
-	}
-
-	for dy := 0; dy < toHeight; dy++ {
-		fy := (float32(dy)+0.5)*scaleY - 0.5
-		sy := int(fy)
-		fy -= float32(sy)
-
-		yofs = append(yofs, sy)
-		cbuf := []float32{1.0-fy,fy}
-
-		for k := 0; k < ksize; k++ {
-			beta = append(beta, int(math.Round(float64(cbuf[k]*2048.0))))
-		}
-	}
-	return
-}
-
 // getCubic ...
 func getCubic(oldImg MonoUInt8, toWidth, toHeight, ksize int) (xofs, yofs, alpha, beta []int, xmin, xmax int) {
 	scaleX := float32(oldImg.Width) / float32(toWidth)
@@ -137,29 +85,6 @@ func getSrows(yof, imgHeight, ksize int) (srows []int) {
 	return
 }
 
-// hResizeLinear ...
-func hResizeLinear(srcImg MonoUInt8, srows, xofs, alpha []int, dstWidth, xmin, xmax, ksize int) (result [][]int){
-	for k := 0; k < ksize; k++ {
-		var row []int
-		dx:=0
-		for dx = 0; dx<xmax; dx++{
-			sx:=xofs[dx]
-			a0 := alpha[dx*2]
-			a1 := alpha[dx*2+1]
-			pix1:=int(srcImg.Frame[srows[k]*srcImg.Width+sx])
-			pix2:=int(srcImg.Frame[srows[k]*srcImg.Width+sx+1])
-			row=append(row,pix1*a0+pix2*a1)
-		}
-		for ; dx < dstWidth; dx++{
-			sx := xofs[dx]
-			pix:=int(srcImg.Frame[srows[k]*srcImg.Width+sx])
-            row=append(row,pix*2048)
-		}
-		result=append(result,row)
-	}
-	return
-} 
-
 // hResizeCubic ...
 func hResizeCubic(srcImg MonoUInt8, srows, xofs, alpha []int, dstWidth, xmin, xmax, ksize int) (result [][]int) {
 	for k := 0; k < ksize; k++ {
@@ -208,19 +133,6 @@ func hResizeCubic(srcImg MonoUInt8, srows, xofs, alpha []int, dstWidth, xmin, xm
 	return
 }
 
-// vResizeLinear ...
-func vResizeLinear(rows [][]int, beta []int, dstWidth int) (result []int, err error) {
-	b0 := beta[0]
-	b1 := beta[1]
-
-	x, result, err := vecOpLinear(rows, beta, dstWidth)
-	for ; x < dstWidth; x++ {
-		val := castOpCubic(rows[0][x]*b0 + rows[1][x]*b1)
-		result = append(result, val)
-	}
-	return
-}
-
 // vResizeCubic ...
 func vResizeCubic(rows [][]int, beta []int, dstWidth int) (result []int, err error) {
 	b0 := beta[0]
@@ -233,12 +145,6 @@ func vResizeCubic(rows [][]int, beta []int, dstWidth int) (result []int, err err
 		val := castOpCubic(rows[0][x]*b0 + rows[1][x]*b1 + rows[2][x]*b2 + rows[3][x]*b3)
 		result = append(result, val)
 	}
-	return
-}
-
-// vecOpLinear ...
-func vecOpLinear(rows [][]int, beta []int, dstWidth int) (x int, result []int, err error) {
-//////////////////
 	return
 }
 

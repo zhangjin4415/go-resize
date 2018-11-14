@@ -9,6 +9,7 @@ package resize
 
 import (
 	"fmt"
+	"math"
 )
 
 // Interpolation ...
@@ -60,33 +61,54 @@ func Resize(srcImg MonoUInt8, toWidth, toHeight int, interp Interpolation) (dstI
 	return
 }
 
-
 // resizeLinear ...
 func resizeLinear(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err error) {
-	const ksize int = 2
-	xofs, yofs, alpha, beta, xmin, xmax := getLinear(srcImg, toWidth, toHeight, ksize)
+	scaleX := float32(srcImg.Width) / float32(toWidth)
+	scaleY := float32(srcImg.Height) / float32(toHeight)
+	for j := 0; j < toHeight; j++ {
+		fy := (float32(j)+0.5)*scaleY - 0.5
+		sy := int(fy)
+		fy -= float32(sy)
+		if sy > srcImg.Height-2 {
+			sy = srcImg.Height - 2
+		}
+		if sy < 0 {
+			sy = 0
+		}
 
-	var betaIdx int
-	for dy := 0; dy < toHeight; dy++ {
-		srows := getSrows(yofs[dy], srcImg.Height, ksize) //0,1  3,4 ...
-		rows := hResizeLinear(srcImg, srows, xofs, alpha, toWidth, xmin, xmax, ksize)
-		out, e := vResizeLinear(rows, beta[betaIdx:betaIdx+ksize], toWidth)
-		// if e != nil {
-		// 	err = e
-		// 	break
-		// }
-		betaIdx += 2
-		// for _, val := range out {
-		// 	dstImg.Frame = append(dstImg.Frame, uint8(val))
-		// }
-		// dstImg.Width, dstImg.Height = toWidth, toHeight
-		fmt.Println(out, e)
+		var cbufy [2]float32
+		cbufy[0] = (1.0 - fy) * 2048
+		cbufy[1] = 2048 - cbufy[0]
+
+		for i := 0; i < toWidth; i++ {
+			fx := (float32(i)+0.5)*scaleX - 0.5
+			sx := int(fx)
+			fx -= float32(sx)
+
+			if sx < 0 {
+				fx, sx = 0, 0
+			}
+			if sx >= srcImg.Width-1 {
+				fx, sx = 0, srcImg.Width-2
+			}
+
+			var cbufx [2]float32
+			cbufx[0] = (1.0 - fx) * 2048
+			cbufx[1] = 2048 - cbufx[0]
+
+			data1 := float32(srcImg.Frame[sy*srcImg.Width+sx]) * cbufx[0] * cbufy[0]
+			data2 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx]) * cbufx[0] * cbufy[1]
+			data3 := float32(srcImg.Frame[sy*srcImg.Width+sx+1]) * cbufx[1] * cbufy[0]
+			data4 := float32(srcImg.Frame[(sy+1)*srcImg.Width+sx+1]) * cbufx[1] * cbufy[1]
+			data := (data1 + data2 + data3 + data4) / float32(pow(2, 22))
+			dstImg.Frame = append(dstImg.Frame, uint8(math.Round(float64(data))))
+		}
+
 	}
-
-	fmt.Println(xofs, yofs, alpha, beta, xmin, xmax)
+	dstImg.Width = toWidth
+	dstImg.Height = toHeight
 	return
 }
-
 
 // resizeCubic ...
 func resizeCubic(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err error) {
@@ -108,7 +130,5 @@ func resizeCubic(srcImg MonoUInt8, toWidth, toHeight int) (dstImg MonoUInt8, err
 		}
 		dstImg.Width, dstImg.Height = toWidth, toHeight
 	}
-
-	fmt.Println(xofs, yofs, alpha, beta, xmin, xmax)
 	return
 }
